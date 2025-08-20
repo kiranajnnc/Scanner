@@ -1,1 +1,38 @@
-
+html
+<!DOCTYPE html> <html> <head> <title>Web Vulnerability Scanner</title> <link rel="stylesheet" href="/static/style.css"> </head> <body> <div class="container"> <h1>Web Vulnerability Scanner</h1> <form id="scanForm"> <input type="text" name="url" placeholder="Enter URL (e.g., example.com)" required> <button type="submit">Scan Website</button> </form> <div id="results"></div> <div id="report" class="hidden"> <a id="reportLink" href="#" target="_blank">Download Full Report</a> </div> </div>
+<script>
+    document.getElementById("scanForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const url = e.target.url.value;
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "<div class='loading'>Scanning website...</div>";
+        
+        try {
+            const response = await fetch("/scan", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: url=${encodeURIComponent(url)}
+            });
+            
+            const data = await response.json();
+            resultsDiv.innerHTML = "";
+            
+            if (data.issues.length > 0) {
+                resultsDiv.innerHTML += "<h3>Found Issues:</h3><ul>";
+                data.issues.forEach(issue => {
+                    resultsDiv.innerHTML += <li>${issue}</li>;
+                });
+                resultsDiv.innerHTML += "</ul>";
+            } else {
+                resultsDiv.innerHTML = "<div class='success'>No vulnerabilities found!</div>";
+            }
+            
+            document.getElementById("report").classList.remove("hidden");
+            document.getElementById("reportLink").href = data.report_url;
+        } catch (error) {
+            resultsDiv.innerHTML = <div class='error'>Error: ${error.message}</div>;
+        }
+    });
+</script>
